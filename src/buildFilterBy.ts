@@ -1,4 +1,4 @@
-import * as assert from 'assert';
+import * as assert from 'assert/strict';
 import type { Geopoint } from './Geopoint';
 
 export type FilterByBoolean<T extends boolean> = {

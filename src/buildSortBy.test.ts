@@ -17,18 +17,19 @@ describe('buildSortBy', () => {
     ).toBe('title(missing_values:first):asc,price(missing_values:last):desc');
   });
 
-  it('sorts by _text_match with buckets', () => {
+  it('sorts by _text_match with buckets and bucket_size', () => {
     expect(
       buildSortBy<{ weighted_score: number }>({
         _text_match: {
           $order: Order.Desc,
           $buckets: 10,
+          $bucket_size: 3,
         },
         weighted_score: {
           $order: Order.Desc,
         },
       })
-    ).toBe('_text_match(buckets:10):desc,weighted_score:desc');
+    ).toBe('_text_match(buckets:10,bucket_size:3):desc,weighted_score:desc');
   });
 
   it('sorts by geopoint', () => {

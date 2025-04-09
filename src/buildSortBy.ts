@@ -1,4 +1,4 @@
-import assert = require('assert');
+import * as assert from 'assert/strict';
 import { buildFilterBy, FilterByQuery } from './buildFilterBy';
 import { Geopoint } from './Geopoint';
 
@@ -81,6 +81,10 @@ export interface SortByTextMatch {
    * Divides the result set into 10 buckets from most relevant results to the least relevant
    */
   $buckets?: number;
+  /**
+   * The size of each bucket
+   */
+  $bucket_size?: number;
 }
 
 type Operator<T> = T extends [lat: number, lng: number]
@@ -133,12 +137,26 @@ function next<T>(node: unknown, path: string[]): string {
         switch (key) {
           case '$order':
           case '$null':
-          case '$buckets': {
-            const { $order, $null, $buckets } = node as SortByNumber & SortByTextMatch;
+          case '$buckets':
+          case '$bucket_size': {
+            const { $order, $null, $buckets, $bucket_size } = node as SortByNumber & SortByTextMatch;
             let expr = path.join('.');
-            if ($null === NullOrder.First) expr += `(missing_values:first)`;
-            if ($null === NullOrder.Last) expr += `(missing_values:last)`;
-            if ($buckets !== undefined) expr += `(buckets:${$buckets})`;
+            let params: string[] | undefined;
+            if ($null !== undefined) {
+              params ??= [];
+              params.push($null === NullOrder.First ? 'missing_values:first' : 'missing_values:last');
+            }
+            if ($buckets !== undefined) {
+              params ??= [];
+              params.push(`buckets:${$buckets}`);
+            }
+            if ($bucket_size !== undefined) {
+              params ??= [];
+              params.push(`bucket_size:${$bucket_size}`);
+            }
+            if (params) {
+              expr += `(${params.join(',')})`;
+            }
             if ($order === Order.Asc) expr += ':asc';
             if ($order === Order.Desc) expr += ':desc';
             terms.push(expr);
